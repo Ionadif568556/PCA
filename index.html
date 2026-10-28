@@ -11,6 +11,7 @@
 /* 将宽表格与 SVG 的滚动严格限制在各自容器内。 */
 html,body{overflow-x:clip}main{width:100%;overflow-x:clip}.table-wrap,.chart{max-width:100%;min-width:0;contain:paint}
 .editor th>label{display:block}
+.result-table th,.result-table td{text-align:center}
 </style>
 </head>
 <body>
@@ -268,7 +269,7 @@ const PAPER_DATA={version:1,name:PAPER_NAME,indicators:['万车死亡人数','�
  function number(value,precision=4){const v=Math.abs(value)<.5*10**(-precision)?0:value;return `<span${v<0?' class="negative"':''}>${v.toFixed(precision)}</span>`;}
  function percent(value){return number(value*100,3)+'%';}
  function pvalue(value){if(value===null)return '不可计算';if(value===0)return '0.0000（低于数值精度）';return `${value.toFixed(4)}（${value.toExponential(4)}）`;}
- function table(headers,rows,foot=[]){return '<table><thead><tr>'+headers.map(h=>`<th scope="col">${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tbody>'+(foot.length?'<tfoot>'+foot.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tfoot>':'')+'</table>';}
+ function table(headers,rows,foot=[]){return '<table class="result-table"><thead><tr>'+headers.map(h=>`<th scope="col">${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tbody>'+(foot.length?'<tfoot>'+foot.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tfoot>':'')+'</table>';}
  function getInput(){
   const n=data.rows.length,p=data.indicators.length;
   if(n<=p)throw Error(`数据不足：地区行数需大于指标数（当前 ${n} 行、${p} 项指标）。`);
