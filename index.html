@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="完全离线可用的主成分分析工具，支持数据集管理、四种预处理、KMO、Bartlett检验与排名比较。">
+<title>主成分分析（PCA）在线计算工具</title>
+<style>
+:root{--primary:#6880a8;--tint:#fbf3ea;--text:#595959;--heading:#3d3d3d;--line:#dcdcdc;--page:#fafbfc;--negative:#b44141}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--text);font:15px/1.8 "Microsoft YaHei","PingFang SC",sans-serif}main{max-width:1000px;margin:auto;padding:52px 24px 36px}header{padding-bottom:24px;border-bottom:1px solid var(--line)}.eyebrow{font-size:12px;letter-spacing:2px;color:var(--primary);font-weight:700}h1{font-size:clamp(25px,5vw,36px);line-height:1.4;color:var(--heading);margin:10px 0 12px}header p{margin:8px 0}.current{font-weight:700;color:var(--heading)}section{padding:28px 0 32px;border-bottom:1px solid var(--line)}h2{border-left:3px solid var(--primary);padding-left:14px;font-size:21px;color:var(--heading);line-height:1.5;margin:0 0 20px}h3{font-size:16px;color:var(--heading);margin:22px 0 10px}p{margin:10px 0}.hint,.small{font-size:13px;color:#727272}.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}.stack-control{display:block;margin:10px 0}label{cursor:pointer}button,input,select{font:inherit;color:inherit}button,select,input{border:1px solid var(--line);border-radius:5px;background:white}button{padding:7px 14px;cursor:pointer;line-height:1.6}button:hover:not(:disabled){border-color:var(--primary);background:#f1f4f9}button:disabled{opacity:.45;cursor:not-allowed}button.primary{background:var(--primary);color:white;border-color:var(--primary);padding:10px 24px;font-weight:700}button.primary:hover{background:#566e96}button.active{color:white;background:var(--primary);border-color:var(--primary)}button.danger{color:var(--negative)}button.tiny{font-size:12px;padding:3px 8px}select{padding:8px 30px 8px 10px;max-width:100%;min-height:42px}.wide-select{width:100%;display:block;margin-top:8px}input{padding:7px 9px;width:100%;min-width:94px}input:focus,select:focus,button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}input[aria-invalid="true"]{border-color:var(--negative);background:#fff4f4}.table-wrap{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:5px;background:white;margin:12px 0;overscroll-behavior-x:contain}table{border-collapse:collapse;width:100%;font-size:14px;text-align:left}th,td{padding:11px 13px;border-bottom:1px solid #e8e8e8;white-space:nowrap;vertical-align:middle}th{background:#f1f4f8;font-weight:600;color:var(--heading)}tbody tr:last-child td,tfoot tr:last-child td{border-bottom:0}tbody tr:hover{background:#f8fafc}tfoot{border-top:2px solid var(--line);background:var(--tint)}.numeric{text-align:right;font-variant-numeric:tabular-nums}.negative{color:var(--negative)}.editor th{min-width:158px;padding:10px}.editor th:first-child{min-width:150px}.editor td{padding:7px 10px}.editor th input{font-size:13px;font-weight:600;width:145px}.editor td input{width:145px}.editor .row-name{width:120px}.editor .direction{font-size:13px;width:145px;padding:6px;margin-top:6px}.col-tools{display:flex;align-items:center;justify-content:space-between;margin-top:5px;font-weight:400}.callout{padding:12px 16px;margin:14px 0;background:var(--tint);border-left:3px solid var(--primary);overflow-wrap:anywhere}.error{color:var(--negative);border-color:var(--negative)}.notice{color:#665d4e}.status{min-height:1.8em;margin:12px 0}.rowcount{margin-left:auto;font-size:13px}.chart{margin-top:16px;border:1px solid var(--line);border-radius:5px;background:white;padding:12px;overflow-x:auto}.chart svg{display:block;width:100%;min-width:560px;height:auto}.msa-list{font-size:13px;line-height:2;overflow-wrap:anywhere}.msa-list span{display:inline-block;margin-right:18px}.tag{color:var(--primary);font-weight:600}.empty{padding:16px;color:#777;text-align:center}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}[hidden]{display:none!important}footer{padding-top:24px;font-size:13px}footer h2{font-size:16px}noscript{display:block;background:var(--tint);padding:16px}a{color:#536e97}#source-note{overflow-wrap:anywhere}@media(max-width:600px){main{padding:26px 16px}h2{font-size:19px}button{padding:7px 11px}.rowcount{margin-left:0;width:100%}section{padding:25px 0}th,td{padding:10px}.chart{padding:6px}}
+/* 将宽表格与 SVG 的滚动严格限制在各自容器内。 */
+html,body{overflow-x:clip}main{width:100%;overflow-x:clip}.table-wrap,.chart{max-width:100%;min-width:0;contain:paint}
+.editor th>label{display:block}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div class="eyebrow">PCA · 多指标综合分析</div>
+ <h1>主成分分析在线计算工具</h1>
+ <p>从原始数据到主成分得分，按计算顺序逐步查看。</p>
+ <p class="current" id="current-name">当前数据集：新数据集</p>
+ <p class="hint">数据仅保存在当前浏览器，不上传。可直接离线打开，也可部署到 GitHub Pages。</p>
+</header>
+<noscript>此工具需要启用 JavaScript 后才能计算。</noscript>
+<div id="storage-status" class="callout notice" role="status" hidden></div>
+<section aria-labelledby="heading1">
+ <h2 id="heading1">一、数据集管理</h2>
+ <label class="stack-control" for="dataset-select">选择数据集<select id="dataset-select" class="wide-select"></select></label>
+ <div class="toolbar">
+  <button id="save-dataset">保存当前数据</button>
+  <button id="delete-dataset" class="danger">删除当前数据集</button>
+  <button id="export-json">导出 JSON</button>
+  <button id="import-json">导入 JSON</button>
+  <input id="file-json" type="file" accept=".json,application/json" hidden>
+ </div>
+ <p id="dataset-status" class="status small" role="status" aria-live="polite"></p>
+ <p id="source-note" class="small" hidden></p>
+</section>
+<section aria-labelledby="heading2">
+ <h2 id="heading2">二、数据输入</h2>
+ <p class="hint">点击表头填写指标名，下方选择方向；每行填写一个地区及其数值。空值不会按 0 处理。</p>
+ <div class="toolbar"><button id="add-row">增加一行</button><button id="add-column">增加指标列</button><span id="rowcount" class="rowcount"></span></div>
+ <div class="table-wrap" tabindex="0" aria-label="可编辑的地区指标数据表"><table id="input-table" class="editor"></table></div>
+ <div class="toolbar"><button id="calculate" class="primary">开始计算</button><span class="small">修改原始数据后需重新计算。</span></div>
+ <p id="input-status" class="status" role="status" aria-live="polite"></p>
+</section>
+<div id="results" hidden>
+ <section aria-labelledby="heading3">
+  <h2 id="heading3">三、适用性检验</h2>
+  <p class="hint">基于原始数据的相关矩阵检验，切换缩放方法不会改变本节结果。</p>
+  <div id="suitability-table" class="table-wrap"></div><div id="msa" class="msa-list"></div><p id="suitability-conclusion" class="callout"></p>
+ </section>
+ <section aria-labelledby="heading4">
+  <h2 id="heading4">四、预处理方法</h2>
+  <label for="method">缩放方式<select id="method" class="wide-select">
+   <option value="standard">标准化（除以标准差）→ 对相关矩阵做分解</option><option value="mean">均值化（除以均值）</option><option value="range">极差化（减最小值除以极差）</option><option value="none">不处理（只中心化）</option>
+  </select></label><p id="method-description" class="callout"></p><p id="method-status" class="status" role="status" aria-live="polite"></p>
+ </section>
+ <section aria-labelledby="heading5"><h2 id="heading5">五、预处理后的数据</h2><p class="hint">下表为完成缩放并再次中心化后的数据，直接作为协方差计算的输入。</p><div id="processed-table" class="table-wrap" tabindex="0"></div></section>
+ <section aria-labelledby="heading6"><h2 id="heading6">六、协方差矩阵</h2><p id="covariance-caption" class="hint"></p><div id="covariance-table" class="table-wrap" tabindex="0"></div></section>
+ <section aria-labelledby="heading7"><h2 id="heading7">七、特征值与方差贡献率</h2><div id="eigen-table" class="table-wrap" tabindex="0"></div><div id="scree-chart" class="chart"></div></section>
+ <section aria-labelledby="heading8"><h2 id="heading8">八、保留几个主成分</h2><label for="retain">保留数量<select id="retain" class="wide-select"></select></label><p id="retained-summary" class="callout"></p><p class="hint">初次计算或更换预处理方法时，默认选择累计贡献率首次达到 85% 的数量。85% 是可调整的经验目标。</p></section>
+ <section aria-labelledby="heading9">
+  <h2 id="heading9">九、得分与排名</h2><div class="toolbar" role="group" aria-label="得分方式"><button id="mode-composite" class="active" aria-pressed="true">综合得分</button><button id="mode-first" aria-pressed="false">仅第一主成分</button></div>
+  <p id="score-direction" class="hint"></p><div id="ranking-table" class="table-wrap" tabindex="0"></div>
+  <p class="small">综合得分 = Σ wₖFₖ，wₖ = 第 k 个特征值 ÷ 全部 p 个特征值之和，k = 1,…,m。</p>
+  <p id="score-explanation" class="small"></p>
+ </section>
+ <section aria-labelledby="heading10"><h2 id="heading10">十、四种预处理方法对比</h2><p id="comparison-caption" class="hint"></p><div id="comparison-table" class="table-wrap" tabindex="0"></div><p class="callout">同一份数据只换预处理方式，排名就可能不同。</p><p id="comparison-errors" class="small"></p></section>
+</div>
+<footer><h2>计算说明</h2><p>四种方法均先缩放、再中心化。标准化使用样本标准差；协方差按 1/(n−1) 计算。特征分解使用 Jacobi 旋转法，相关矩阵求逆使用高斯–约当消元，Bartlett 的 p 值通过不完全伽马函数的级数与连分式计算。</p><p>综合得分使用全部特征值之和作为权重分母。方向按第一主成分与 goodᵢ = Σ dirⱼzᵢⱼ 的相关系数统一；若为负，则全部特征向量与得分同时反号。此规则统一第一主成分方向，不代表所有保留成分都分别与 good 正相关。</p><p>得分越高作为排名越好。等分采用并列名次。对于零相关或退化成分，方向可能无法判定；相关矩阵奇异时不强行计算 KMO 或 Bartlett。统计适用性检验仅供辅助判断。</p><p class="small">本地暂存受浏览器与访问地址影响。file://、不同域名及不同浏览器的存储不共享；重要数据请保存并导出 JSON。</p></footer>
+<p class="small">符号约定：各特征向量先采用系数和非负的初始符号，系数和接近 0 时以绝对值最大系数为正，再执行整体方向统一。同值特征根对应的基底不唯一，解读综合得分时需考虑这一点。</p>
+</main>
+<script>
+'use strict';
+/* 所有算法与页面代码均在本文件中。无网络请求，无外部依赖。 */
+const PCA = (() => {
+ const METHODS = ['standard','mean','range','none'];
+ const identity = n => Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+ const average = a => a.reduce((s,x)=>s+x/a.length,0);
+ const dot = (a,b) => a.reduce((s,x,i)=>s+x*b[i],0);
+ function covariance(z) {
+  const n=z.length,p=z[0].length,c=Array.from({length:p},()=>Array(p).fill(0));
+  for(let a=0;a<p;a++)for(let b=a;b<p;b++){
+   const value=z.reduce((s,row)=>s+row[a]*row[b]/(n-1),0);
+   if(!Number.isFinite(value))throw Error('数值范围过大，协方差计算溢出；请调整数据单位。');
+   c[a][b]=c[b][a]=value;
+  }
+  return c;
+ }
+ function preprocess(x,method) {
+  if(!METHODS.includes(method))throw Error('未知的预处理方法。');
+  const n=x.length,p=x[0].length,z=x.map(row=>row.slice());
+  for(let j=0;j<p;j++){
+   const col=x.map(row=>row[j]),mean=average(col),min=Math.min(...col),max=Math.max(...col);
+   const scale=Math.max(...col.map(Math.abs));
+   if(max===min)throw Error(`指标 ${j+1} 为常数列，无法进行 PCA。`);
+   const sd=Math.sqrt(col.reduce((s,v)=>s+((v-mean)/Math.sqrt(n-1))**2,0));
+   if(!Number.isFinite(sd)||!Number.isFinite(max-min))throw Error(`指标 ${j+1} 的数值范围过大。`);
+   if(method==='standard'&&sd===0)throw Error(`指标 ${j+1} 的标准差为 0。`);
+   if(method==='mean'&&Math.abs(mean)<=Math.max(Number.MIN_VALUE,scale*1e-14))throw Error(`指标 ${j+1} 的均值为 0 或接近 0，不能均值化。`);
+   for(let i=0;i<n;i++)z[i][j]=method==='standard'?(x[i][j]-mean)/sd:method==='mean'?x[i][j]/mean:method==='range'?(x[i][j]-min)/(max-min):x[i][j];
+   const center=average(z.map(row=>row[j]));
+   for(let i=0;i<n;i++){z[i][j]-=center;if(!Number.isFinite(z[i][j]))throw Error('预处理产生非有限数值，请调整数据。');}
+  }
+  return z;
+ }
+ function jacobi(matrix) {
+  const n=matrix.length,a=matrix.map(r=>r.slice()),v=identity(n);
+  const norm=Math.max(...a.flat().map(Math.abs));
+  if(!norm)return {values:Array(n).fill(0),vectors:identity(n)};
+  // 相对尺度判断收敛，避免把极小但有效的协方差误当作零矩阵。
+  const tolerance=norm*1e-14;
+  let converged=false;
+  for(let iteration=0;iteration<100*n*n;iteration++){
+   let p=0,q=1,largest=0;
+   for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(a[i][j])>largest){largest=Math.abs(a[i][j]);p=i;q=j;}
+   if(largest<=tolerance){converged=true;break;}
+   const apq=a[p][q],tau=(a[q][q]-a[p][p])/(2*apq);
+   const t=(tau>=0?1:-1)/(Math.abs(tau)+Math.hypot(1,tau)),c=1/Math.hypot(1,t),s=t*c;
+   const app=a[p][p],aqq=a[q][q];
+   a[p][p]=app-t*apq;a[q][q]=aqq+t*apq;a[p][q]=a[q][p]=0;
+   for(let k=0;k<n;k++){
+    if(k!==p&&k!==q){const akp=a[k][p],akq=a[k][q];a[k][p]=a[p][k]=c*akp-s*akq;a[k][q]=a[q][k]=s*akp+c*akq;}
+    const vkp=v[k][p],vkq=v[k][q];v[k][p]=c*vkp-s*vkq;v[k][q]=s*vkp+c*vkq;
+   }
+  }
+  if(!converged)throw Error('Jacobi 特征分解未收敛，请检查数据。');
+  const order=Array.from({length:n},(_,i)=>i).sort((i,j)=>a[j][j]-a[i][i]);
+  const values=order.map(i=>a[i][i]<0&&Math.abs(a[i][i])<norm*1e-10?0:a[i][i]);
+  if(values.some(x=>x<0||!Number.isFinite(x)))throw Error('协方差矩阵存在异常特征值。');
+  // 固定任意的初始符号以确保复现；之后 analyze 严格执行全部成分整体反号。
+  const vectors=order.map(i=>{
+   const vector=v.map(row=>row[i]),sum=vector.reduce((s,x)=>s+x,0);
+   const largest=vector.reduce((best,x,j)=>Math.abs(x)>Math.abs(vector[best])?j:best,0);
+   return (Math.abs(sum)>1e-12?sum:vector[largest])<0?vector.map(x=>-x):vector;
+  });
+  return {values,vectors};
+ }
+ function inverse(matrix) {
+  const n=matrix.length,a=matrix.map((r,i)=>r.concat(identity(n)[i]));
+  const norm=Math.max(...matrix.flat().map(Math.abs));
+  for(let j=0;j<n;j++){
+   let pivot=j;for(let i=j+1;i<n;i++)if(Math.abs(a[i][j])>Math.abs(a[pivot][j]))pivot=i;
+   if(Math.abs(a[pivot][j])<=norm*1e-12)throw Error('相关矩阵奇异或接近奇异。');
+   [a[j],a[pivot]]=[a[pivot],a[j]];
+   const divisor=a[j][j];for(let k=0;k<2*n;k++)a[j][k]/=divisor;
+   for(let i=0;i<n;i++)if(i!==j){const f=a[i][j];for(let k=0;k<2*n;k++)a[i][k]-=f*a[j][k];}
+  }
+  return a.map(row=>row.slice(n));
+ }
+ function logGamma(z){
+  const c=[676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(z<.5)return Math.log(Math.PI)-Math.log(Math.sin(Math.PI*z))-logGamma(1-z);
+  z-=1;let x=.99999999999980993;for(let i=0;i<c.length;i++)x+=c[i]/(z+i+1);
+  const t=z+c.length-.5;return .5*Math.log(2*Math.PI)+(z+.5)*Math.log(t)-t+Math.log(x);
+ }
+ function gammaQ(a,x){
+  if(!(a>0)||x<0||!Number.isFinite(x))throw Error('卡方概率参数无效。');
+  if(x===0)return 1;
+  const factor=Math.exp(a*Math.log(x)-x-logGamma(a)),epsilon=1e-14,tiny=1e-300;
+  if(x<a+1){
+   let sum=1/a,term=sum,ap=a;
+   for(let i=1;i<=10000;i++){ap++;term*=x/ap;sum+=term;if(Math.abs(term)<Math.abs(sum)*epsilon)return Math.min(1,Math.max(0,1-sum*factor));}
+  }else{
+   let b=x+1-a,c=1/tiny,d=1/(Math.abs(b)<tiny?tiny:b),h=d;
+   for(let i=1;i<=10000;i++){
+    const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<tiny)d=tiny;c=b+an/c;if(Math.abs(c)<tiny)c=tiny;d=1/d;const delta=d*c;h*=delta;
+    if(Math.abs(delta-1)<epsilon)return Math.min(1,Math.max(0,factor*h));
+   }
+  }
+  throw Error('不完全伽马函数未收敛。');
+ }
+ function correlation(a,b){
+  const ma=average(a),mb=average(b),aa=a.map(x=>x-ma),bb=b.map(x=>x-mb),den=Math.sqrt(dot(aa,aa))*Math.sqrt(dot(bb,bb));
+  return den>0?Math.max(-1,Math.min(1,dot(aa,bb)/den)):null;
+ }
+ function analyze(x,directions,method){
+  const z=preprocess(x,method),c=covariance(z),eig=jacobi(c),total=eig.values.reduce((s,x)=>s+x,0);
+  if(!(total>0)||!Number.isFinite(total))throw Error('总方差必须大于 0 且有限。');
+  let vectors=eig.vectors,f=z.map(row=>vectors.map(v=>dot(row,v)));
+  const good=z.map(row=>dot(row,directions));
+  const orientation=correlation(f.map(row=>row[0]),good),flipped=orientation!==null&&orientation<0;
+  if(flipped){vectors=vectors.map(v=>v.map(x=>-x));f=f.map(row=>row.map(x=>-x));}
+  const shares=eig.values.map(x=>x/total),cumulative=[];shares.reduce((s,x,i)=>(cumulative[i]=s+x),0);
+  return {z,c,values:eig.values,vectors,f,total,shares,cumulative,orientation:orientation===null?null:Math.abs(orientation),flipped};
+ }
+ function composite(result,m){return result.f.map(row=>row.slice(0,m).reduce((s,x,k)=>s+result.shares[k]*x,0));}
+ function rank(scores){
+  const order=scores.map((score,i)=>({score,i})).sort((a,b)=>b.score-a.score||a.i-b.i),ranks=Array(scores.length);
+  let current=1;
+  order.forEach((row,i)=>{if(i&&Math.abs(row.score-order[i-1].score)>1e-10*Math.max(1,Math.abs(row.score),Math.abs(order[i-1].score)))current=i+1;row.rank=current;ranks[row.i]=current;});
+  return {order,ranks};
+ }
+ function suitability(x){
+  const r=covariance(preprocess(x,'standard')),p=r.length,n=x.length,eig=jacobi(r);
+  let strong=0;for(let i=0;i<p;i++)for(let j=i+1;j<p;j++)if(Math.abs(r[i][j])>.3)strong++;
+  const result={r,strong,pairs:p*(p-1)/2,kmo:null,msa:null,chi:null,df:p*(p-1)/2,pvalue:null,error:''};
+  try{
+   if(eig.values.some(v=>v<=Math.max(...eig.values)*1e-12))throw Error('相关矩阵奇异或接近奇异。');
+   const inv=inverse(r);let rs=0,ps=0;const msa=[];
+   for(let i=0;i<p;i++){
+    let ri=0,pi=0;
+    for(let j=0;j<p;j++)if(i!==j){const den=inv[i][i]*inv[j][j];if(!(den>0))throw Error('相关矩阵逆不稳定。');const partial=-inv[i][j]/Math.sqrt(den);ri+=r[i][j]**2;pi+=partial**2;}
+    rs+=ri;ps+=pi;msa.push(ri+pi>1e-25?ri/(ri+pi):null);
+   }
+   result.kmo=rs+ps>1e-25?rs/(rs+ps):null;result.msa=msa;
+   // log(det(R)) = Σ log(λ)，等价于全部特征值之积，避免连乘下溢。
+   const logDet=Math.min(0,eig.values.reduce((s,v)=>s+Math.log(v),0));
+   result.chi=-((n-1)-(2*p+5)/6)*logDet;result.pvalue=gammaQ(result.df/2,result.chi/2);
+  }catch(error){result.error=error.message;}
+  return result;
+ }
+ return {METHODS,preprocess,covariance,jacobi,inverse,logGamma,gammaQ,correlation,analyze,composite,rank,suitability};
+})();
+globalThis.PCA=PCA;
+
+const PAPER_NAME='论文示例：2009 年东部 11 省市 · 6 项指标';
+const PAPER_DATA={version:1,name:PAPER_NAME,indicators:['万车死亡人数','万车受伤人数','公路里程事故数','百万元GDP损失率','事故致死率','10万km特大事故数'].map(name=>({name,direction:-1})),rows:[
+ ['北京',2.350,11.332,.184,17.917,.172,0],['天津',6.068,29.590,.268,31.921,.170,0],['河北',2.204,5.913,.045,26.083,.271,.657],['辽宁',4.545,14.033,.069,21.404,.245,0],['上海',4.266,11.061,.243,8.479,.278,0],['江苏',3.832,10.312,.101,15.877,.271,0],['浙江',5.660,25.357,.219,38.946,.182,.935],['福建',4.357,24.318,.152,39.539,.152,1.117],['山东',2.378,8.921,.071,16.775,.210,1.765],['广东',3.670,21.653,.175,21.503,.145,.541],['海南',3.803,14.275,.066,25.214,.210,0]
+].map(([name,...values])=>({name,values:values.map(String)}))};
+
+(() => {
+ const $=id=>document.getElementById(id),copy=x=>JSON.parse(JSON.stringify(x));
+ const PREFIX='pca_dataset_',WORKSPACE='pca_workspace';
+ const methodNames={standard:'标准化',mean:'均值化',range:'极差化',none:'不处理'};
+ const descriptions={standard:'每列减均值、除以样本标准差，再次中心化。协方差矩阵等于相关矩阵，各指标方差为 1。',mean:'每列除以原始均值，再次减去缩放后的列均值。均值为 0 或接近 0 时，该方法不可用。',range:'每列减去最小值并除以极差，再次中心化。各列先缩放到 [0,1]，中心化后可以出现负数。',none:'保留原始单位，仅减去列均值。数值尺度较大的指标可能主导分解。'};
+ const emptyData=()=>({version:1,name:'新数据集',indicators:Array.from({length:6},()=>({name:'',direction:-1})),rows:[{name:'',values:Array(6).fill('')}]});
+ const signature=data=>JSON.stringify({indicators:data.indicators,rows:data.rows});
+ let data=emptyData(),currentKey='',currentName='新数据集',savedSnapshot=signature(data),dirty=false,cache=null,m=1,mode='composite',storageOK=true;
+ const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function storageWarning(){storageOK=false;$('storage-status').hidden=false;$('storage-status').textContent='当前浏览器无法完成本地保存或存储已满。计算仍可使用，请导出 JSON 备份数据。';}
+ function read(key){try{return localStorage.getItem(key);}catch{storageWarning();return null;}}
+ function write(key,value){try{localStorage.setItem(key,value);return true;}catch{storageWarning();return false;}}
+ function validateData(raw){
+  if(!raw||!Array.isArray(raw.indicators)||raw.indicators.length<2||raw.indicators.length>10||!Array.isArray(raw.rows)||raw.rows.length<1||raw.rows.length>10000)throw Error('JSON 需包含 2–10 项 indicators 和 1–10000 行 rows。');
+  const indicators=raw.indicators.map(item=>{if(!item||typeof item.name!=='string'||![-1,1].includes(item.direction))throw Error('每个指标必须包含 name 和 direction（1 或 -1）。');return {name:item.name,direction:item.direction};});
+  const rows=raw.rows.map(row=>{if(!row||typeof row.name!=='string'||!Array.isArray(row.values)||row.values.length!==indicators.length)throw Error('地区名称或数值矩阵维度不正确。');return {name:row.name,values:row.values.map(v=>{if(v!==''&&!(typeof v==='string'||typeof v==='number'))throw Error('数值仅支持数字或空白字符串。');if(String(v).trim()!==''&&!Number.isFinite(Number(v)))throw Error('JSON 中包含无效数值。');return String(v);})};});
+  return {version:1,name:typeof raw.name==='string'?raw.name:'导入的数据集',indicators,rows};
+ }
+ function autosave(){write(WORKSPACE,JSON.stringify({data,currentKey,currentName,savedSnapshot,dirty,method:$('method').value,m,mode}));}
+ function refreshTitle(){
+  $('current-name').textContent=`当前数据集：${currentName}${dirty?'（未保存修改）':''}`;
+  $('delete-dataset').disabled=!currentKey;
+  $('source-note').hidden=currentName!==PAPER_NAME;
+  $('source-note').textContent='内置数据按所提供论文示例录入。来源：孙健、魏丽英，《基于均值化主成分分析的交通安全评价方法研究》，《交通信息与安全》2012 年第 30 卷第 1 期。';
+ }
+ function datasetOptions(){
+  const select=$('dataset-select');select.innerHTML='<option value="">＋ 新数据集（空白）</option><option value="paper">'+esc(PAPER_NAME)+'</option>';
+  try{
+   const keys=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key&&key.startsWith(PREFIX))keys.push(key);}
+   const items=keys.map(key=>{try{const saved=validateData(JSON.parse(localStorage.getItem(key)));return {key,name:saved.name};}catch{return null;}}).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
+   for(const item of items){const option=document.createElement('option');option.value=item.key;option.textContent=item.name;select.append(option);}
+  }catch{storageWarning();}
+  select.value=currentKey||(currentName===PAPER_NAME?'paper':'');
+ }
+ function renderEditor(){
+  const p=data.indicators.length;
+  const columns=data.indicators.map((item,j)=>`<th scope="col"><label><span class="sr-only">指标 ${j+1} 名称</span><input data-kind="indicator" data-col="${j}" value="${esc(item.name)}" placeholder="指标 ${j+1}" aria-label="指标 ${j+1} 名称"></label><label><span class="sr-only">指标 ${j+1} 方向</span><select class="direction" data-kind="direction" data-col="${j}" aria-label="指标 ${j+1} 方向"><option value="-1"${item.direction===-1?' selected':''}>越大越差</option><option value="1"${item.direction===1?' selected':''}>越大越好</option></select></label><div class="col-tools"><span>方向</span><button class="tiny" data-action="delete-column" data-col="${j}" aria-label="删除指标 ${j+1}"${p<=2?' disabled':''}>删除指标</button></div></th>`).join('');
+  const rows=data.rows.map((row,i)=>`<tr><th scope="row"><input class="row-name" data-kind="region" data-row="${i}" value="${esc(row.name)}" placeholder="地区 ${i+1}" aria-label="第 ${i+1} 行地区名"></th>${row.values.map((value,j)=>`<td><input type="text" inputmode="decimal" data-kind="value" data-row="${i}" data-col="${j}" value="${esc(value)}" aria-label="第 ${i+1} 行指标 ${j+1} 数值" placeholder="填写数值" autocomplete="off" spellcheck="false"></td>`).join('')}<td><button class="tiny danger" data-action="delete-row" data-row="${i}"${data.rows.length<=3?' disabled':''} aria-label="删除第 ${i+1} 行">删除该行</button></td></tr>`).join('');
+  $('input-table').innerHTML=`<thead><tr><th scope="col">地区名称</th>${columns}<th scope="col">行操作</th></tr></thead><tbody>${rows}</tbody>`;
+  $('rowcount').textContent=`${data.rows.length} 个地区 · ${p} 项指标`;$('add-column').disabled=p>=10;
+ }
+ function changed(){dirty=signature(data)!==savedSnapshot;cache=null;$('results').hidden=true;$('input-status').textContent='数据已修改，请点击“开始计算”。';$('input-status').className='status';refreshTitle();autosave();}
+ function setDataset(next,key,name){data=copy(next);currentKey=key;currentName=name;savedSnapshot=signature(data);dirty=false;cache=null;m=1;mode='composite';$('method').value='standard';$('results').hidden=true;$('input-status').textContent='';$('dataset-status').textContent='';renderEditor();datasetOptions();refreshTitle();autosave();}
+ function confirmDiscard(){return !dirty||confirm('当前数据有未保存修改，是否放弃修改？');}
+ function number(value,precision=4){const v=Math.abs(value)<.5*10**(-precision)?0:value;return `<span${v<0?' class="negative"':''}>${v.toFixed(precision)}</span>`;}
+ function percent(value){return number(value*100,3)+'%';}
+ function pvalue(value){if(value===null)return '不可计算';if(value===0)return '0.0000（低于数值精度）';return `${value.toFixed(4)}（${value.toExponential(4)}）`;}
+ function table(headers,rows,foot=[]){return '<table><thead><tr>'+headers.map(h=>`<th scope="col">${esc(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tbody>'+(foot.length?'<tfoot>'+foot.map(row=>'<tr>'+row.map((cell,j)=>`<td${j?' class="numeric"':''}>${cell}</td>`).join('')+'</tr>').join('')+'</tfoot>':'')+'</table>';}
+ function getInput(){
+  const n=data.rows.length,p=data.indicators.length;
+  if(n<=p)throw Error(`数据不足：地区行数需大于指标数（当前 ${n} 行、${p} 项指标）。`);
+  const bad=[];
+  const x=data.rows.map((row,i)=>row.values.map((s,j)=>{if(String(s).trim()===''||!Number.isFinite(Number(s))){bad.push([i,j]);return NaN;}return Number(s);}));
+  $('input-table').querySelectorAll('[aria-invalid]').forEach(el=>el.removeAttribute('aria-invalid'));
+  if(bad.length){for(const [i,j] of bad)$('input-table').querySelector(`[data-kind="value"][data-row="${i}"][data-col="${j}"]`).setAttribute('aria-invalid','true');const [i,j]=bad[0];throw Error(`请补全有效数值：第 ${i+1} 行、指标 ${j+1}（共 ${bad.length} 个单元格）。`);}
+  return {x,n,p,directions:data.indicators.map(col=>col.direction),names:data.indicators.map((col,j)=>col.name.trim()||`指标 ${j+1}`),regions:data.rows.map((row,i)=>row.name.trim()||`地区 ${i+1}`)};
+ }
+ function renderSuitability(){
+  const s=cache.suitability,level=s.kmo===null?'不可判断':s.kmo>.7?'适合':s.kmo>=.6?'一般':s.kmo>=.5?'勉强':'不适合';
+  $('suitability-table').innerHTML=table(['检验项目','检验结果','判断'],[
+   ['KMO 取样适切性',s.kmo===null?'不可计算':number(s.kmo),level],
+   ['Bartlett 球形检验',s.chi===null?'不可计算':`χ² = ${number(s.chi)}，df = ${s.df}，p = ${pvalue(s.pvalue)}`,s.pvalue===null?'不可判断':s.pvalue<.05?'显著（p < 0.05）':'不显著（p ≥ 0.05）'],
+   ['相关系数强度',`${s.strong} / ${s.pairs} 对满足 |r| &gt; 0.3`,s.strong?'存在较强相关':'相关较弱']]);
+  $('msa').innerHTML='各指标 MSA：'+cache.input.names.map((name,j)=>{const val=s.msa?.[j];return `<span${val!==undefined&&val!==null&&val<.5?' class="negative"':''}>${esc(name)}：${val===null||val===undefined?'不可计算':val.toFixed(4)+(val<.5?'（低于 0.5）':'')}</span>`;}).join('');
+  let conclusion=s.error?`${s.error}KMO 与 Bartlett 无法可靠计算。PCA 可继续查看，但不应据此认定适用性。`:s.kmo===null?'相关结构接近单位矩阵，KMO 无法判定；请结合研究目的判断。':s.kmo<.5?(s.pvalue<.05?'Bartlett 显著，但 KMO 低于 0.5，适用性证据不一致，应谨慎解释。':'KMO 偏低且 Bartlett 不显著，当前数据不宜直接用于综合评价。'):s.pvalue<.05?`KMO 判断为“${level}”，Bartlett 显著，可结合载荷和业务含义进一步分析。`:'Bartlett 不显著，缺少足够的相关结构证据，应谨慎采用 PCA。';
+  if(cache.input.n<5*cache.input.p)conclusion+=' 样本偏少，KMO 在小样本下不稳定，此时以 Bartlett 检验结果为主要依据。';
+  $('suitability-conclusion').textContent=conclusion;
+ }
+ function renderScree(r){
+  const p=r.values.length,w=920,h=310,left=64,right=28,top=44,bottom=52,pw=w-left-right,ph=h-top-bottom;
+  const max=Math.max(...r.values)*1.18,slot=pw/p,bar=slot*.56;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" role="img" aria-labelledby="chart-title chart-desc"><title id="chart-title">主成分特征值碎石柱状图</title><desc id="chart-desc">${r.values.map((v,i)=>`PC${i+1} 特征值 ${v.toFixed(4)}，贡献率 ${(r.shares[i]*100).toFixed(3)}%`).join('；')}</desc><g font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="12" fill="#595959">`;
+  for(let i=0;i<=4;i++){const y=top+ph-i*ph/4;svg+=`<line x1="${left}" y1="${y}" x2="${w-right}" y2="${y}" stroke="#e7e7e7"/><text x="${left-10}" y="${y+4}" text-anchor="end">${(max*i/4).toFixed(4)}</text>`;}
+  r.values.forEach((value,i)=>{const x=left+i*slot+(slot-bar)/2,bh=ph*value/max,y=top+ph-bh;svg+=`<rect x="${x}" y="${y}" width="${bar}" height="${Math.max(0,bh)}" rx="2" fill="${i<m?'#6880a8':'#c8d2e1'}"><title>PC${i+1}：${value.toFixed(4)}</title></rect><text x="${x+bar/2}" y="${y-9}" text-anchor="middle">${(r.shares[i]*100).toFixed(3)}%</text><text x="${x+bar/2}" y="${top+ph+25}" text-anchor="middle">PC${i+1}</text>`;});
+  svg+=`<text x="${left}" y="18">特征值</text><text x="${w-right}" y="${h-5}" text-anchor="end">主成分序号（上方标注方差贡献率）</text></g></svg>`;$('scree-chart').innerHTML=svg;
+ }
+ function renderDownstream(resetM){
+  const method=$('method').value,r=cache.methods[method];$('method-description').textContent=descriptions[method];$('method-status').textContent='';
+  if(r.error){$('method-status').textContent=r.error;$('method-status').className='status error';for(const id of ['processed-table','covariance-table','eigen-table','ranking-table','scree-chart'])$(id).innerHTML='<p class="empty">当前预处理方法不可计算，请更换方法。</p>';$('retain').innerHTML='';$('retain').disabled=true;$('retained-summary').textContent='暂无可保留的主成分。';$('score-direction').textContent='';$('score-explanation').textContent='';$('covariance-caption').textContent='';renderComparison();return;}
+  $('method-status').className='status';if(resetM){const first=r.cumulative.findIndex(v=>v>=.85-1e-12);m=first<0?cache.input.p:first+1;}m=Math.min(Math.max(1,m),cache.input.p);
+  $('retain').disabled=false;$('retain').innerHTML=r.values.map((_,k)=>`<option value="${k+1}"${m===k+1?' selected':''}>${k+1} 个主成分</option>`).join('');
+  const {names,regions}=cache.input;
+  $('processed-table').innerHTML=table(['地区',...names],r.z.map((row,i)=>[esc(regions[i]),...row.map(v=>number(v))]));
+  $('covariance-caption').textContent=method==='standard'?'对角线为标准化指标的样本方差，均为 1；该矩阵也是相关矩阵。':'对角线为缩放并中心化后各指标的样本方差，非对角线为协方差。';
+  $('covariance-table').innerHTML=table(['指标',...names],r.c.map((row,i)=>[esc(names[i]),...row.map(v=>number(v))]));
+  $('eigen-table').innerHTML=table(['主成分','特征值','贡献率','累计贡献率'],r.values.map((value,i)=>[`PC${i+1}`,number(value),percent(r.shares[i]),percent(r.cumulative[i])]));
+  $('retained-summary').innerHTML=`保留 ${m} 个主成分，累计贡献率为 <strong>${percent(r.cumulative[m-1])}</strong>。对应特征值：${r.values.slice(0,m).map(v=>number(v)).join('、')}。`;
+  renderScree(r);renderRanking();renderComparison();autosave();
+ }
+ function renderRanking(){
+  const r=cache.methods[$('method').value];if(r.error)return;
+  const scores=mode==='first'?r.f.map(row=>row[0]):PCA.composite(r,m),rank=PCA.rank(scores);
+  $('ranking-table').innerHTML=table(['排名','地区','得分'],rank.order.map(row=>[String(row.rank),esc(cache.input.regions[row.i]),number(row.score)]));
+  $('mode-composite').classList.toggle('active',mode==='composite');$('mode-first').classList.toggle('active',mode==='first');$('mode-composite').setAttribute('aria-pressed',String(mode==='composite'));$('mode-first').setAttribute('aria-pressed',String(mode==='first'));
+  $('score-direction').textContent=r.orientation===null||r.orientation<1e-10?'第一主成分与 good 的相关为零或不可计算，无法可靠统一方向；此时排名仅按当前数学得分展示。':`按指定规则${r.flipped?'已将全部成分整体反号':'无需整体反号'}。排名按得分从高到低排列。`;
+  $('score-explanation').textContent=m===1?'m = 1 时，综合得分 = 第一主成分得分 × 第一成分贡献率。因此两者排名相同；数值通常不同，仅在贡献率为 100% 时相同。':'m > 1 时，综合得分纳入前 m 个成分，与仅第一主成分的数值通常不同，排名也可能不同。';
+ }
+ function renderComparison(){
+  if(!cache)return;const results=PCA.METHODS.map(method=>cache.methods[method]);
+  const rankings=results.map(r=>r.error?null:PCA.rank(PCA.composite(r,m)).ranks);
+  $('comparison-caption').textContent=`四种方法均保留相同的 m = ${m} 个主成分，以综合得分比较；1 = 最好。此表不随上节的得分切换按钮改变。`;
+  const rows=cache.input.regions.map((name,i)=>[esc(name),...rankings.map(r=>r?String(r[i]):'不可计算')]);
+  const foot=[['第一主成分贡献率',...results.map(r=>r.error?'不可计算':percent(r.shares[0]))],[`前 ${m} 个累计贡献率`,...results.map(r=>r.error?'不可计算':percent(r.cumulative[Math.min(m,r.values.length)-1]))]];
+  $('comparison-table').innerHTML=table(['地区',...PCA.METHODS.map(method=>methodNames[method])],rows,foot);
+  $('comparison-errors').textContent=PCA.METHODS.filter(method=>cache.methods[method].error).map(method=>`${methodNames[method]}：${cache.methods[method].error}`).join(' ');
+ }
+ $('input-table').addEventListener('input',event=>{
+  const el=event.target,kind=el.dataset.kind;if(!kind||kind==='direction')return;const i=Number(el.dataset.row),j=Number(el.dataset.col);
+  if(kind==='indicator')data.indicators[j].name=el.value;else if(kind==='region')data.rows[i].name=el.value;else if(kind==='value'){data.rows[i].values[j]=el.value;el.removeAttribute('aria-invalid');}changed();
+ });
+ $('input-table').addEventListener('change',event=>{const el=event.target;if(el.dataset.kind==='direction'){data.indicators[Number(el.dataset.col)].direction=Number(el.value);changed();}});
+ $('input-table').addEventListener('click',event=>{const button=event.target.closest('button[data-action]');if(!button||button.disabled)return;if(button.dataset.action==='delete-row'&&data.rows.length>3)data.rows.splice(Number(button.dataset.row),1);else if(button.dataset.action==='delete-column'&&data.indicators.length>2){const j=Number(button.dataset.col);data.indicators.splice(j,1);data.rows.forEach(row=>row.values.splice(j,1));}renderEditor();changed();});
+ $('add-row').onclick=()=>{data.rows.push({name:'',values:Array(data.indicators.length).fill('')});renderEditor();changed();};
+ $('add-column').onclick=()=>{if(data.indicators.length>=10)return;data.indicators.push({name:'',direction:-1});data.rows.forEach(row=>row.values.push(''));renderEditor();changed();};
+ $('dataset-select').onchange=()=>{const key=$('dataset-select').value;if(!confirmDiscard()){datasetOptions();return;}if(!key)setDataset(emptyData(),'','新数据集');else if(key==='paper')setDataset(PAPER_DATA,'',PAPER_NAME);else{try{const saved=validateData(JSON.parse(read(key)));setDataset(saved,key,saved.name);}catch(error){$('dataset-status').textContent='无法读取：'+error.message;datasetOptions();}}};
+ $('save-dataset').onclick=()=>{
+  const answer=prompt('请输入数据集名称：',currentName==='新数据集'||currentName===PAPER_NAME?'我的数据集':currentName);if(answer===null)return;const name=answer.trim();if(!name){$('dataset-status').textContent='名称不能为空。';return;}
+  const key=PREFIX+encodeURIComponent(name);if(read(key)!==null&&!confirm(`名称“${name}”已存在，是否覆盖？`))return;
+  const saved={...copy(data),name};if(!write(key,JSON.stringify(saved)))return;data=saved;currentName=name;currentKey=key;savedSnapshot=signature(data);dirty=false;datasetOptions();refreshTitle();autosave();$('dataset-status').textContent='已保存到当前浏览器。';
+ };
+ $('delete-dataset').onclick=()=>{if(!currentKey)return;if(!confirm(`确定删除“${currentName}”吗？${dirty?'未保存修改也会清空。':''}`))return;try{localStorage.removeItem(currentKey);setDataset(emptyData(),'','新数据集');$('dataset-status').textContent='数据集已删除，已返回空白状态。';}catch{storageWarning();}};
+ $('export-json').onclick=()=>{const payload={...copy(data),name:currentName};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=(currentName.replace(/[\\/:*?"<>|]/g,'_')||'PCA数据集')+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ $('import-json').onclick=()=>$('file-json').click();
+ $('file-json').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>10*1024*1024)throw Error('文件大于 10 MB，请精简后导入。');const imported=validateData(JSON.parse((await file.text()).replace(/^\uFEFF/,'')));if(!confirmDiscard())return;setDataset(imported,'',imported.name);savedSnapshot='';dirty=true;refreshTitle();autosave();$('dataset-status').textContent='JSON 已导入。可继续编辑，或点击“保存当前数据”命名保存。';}catch(error){$('dataset-status').textContent='导入失败：'+error.message;}finally{event.target.value='';}};
+ $('calculate').onclick=()=>{
+  try{
+   const input=getInput(),methods={};
+   // 单个方法失败不影响其他预处理方式的计算和对比。
+   for(const method of PCA.METHODS){try{methods[method]=PCA.analyze(input.x,input.directions,method);}catch(error){methods[method]={error:error.message};}}
+   if(PCA.METHODS.every(method=>methods[method].error))throw Error(methods.standard.error);
+   cache={input,methods,suitability:PCA.suitability(input.x)};renderSuitability();renderDownstream(true);$('results').hidden=false;
+   $('input-status').className='status';$('input-status').textContent=`计算完成：${input.n} 个地区，${input.p} 项指标。结果按下方顺序展示。`;
+  }catch(error){cache=null;$('results').hidden=true;$('input-status').textContent=error.message;$('input-status').className='status error';}
+ };
+ $('method').onchange=()=>{if(cache)renderDownstream(true);};
+ $('retain').onchange=()=>{m=Number($('retain').value);if(cache)renderDownstream(false);};
+ for(const [id,value] of [['mode-composite','composite'],['mode-first','first']])$(id).onclick=()=>{mode=value;if(cache)renderRanking();autosave();};
+ try{
+  const workspace=read(WORKSPACE);
+  if(workspace){const w=JSON.parse(workspace);data=validateData(w.data);currentKey=typeof w.currentKey==='string'&&w.currentKey.startsWith(PREFIX)?w.currentKey:'';currentName=typeof w.currentName==='string'?w.currentName:'新数据集';savedSnapshot=typeof w.savedSnapshot==='string'?w.savedSnapshot:signature(data);dirty=signature(data)!==savedSnapshot;$('method').value=PCA.METHODS.includes(w.method)?w.method:'standard';mode=w.mode==='first'?'first':'composite';m=Number.isInteger(w.m)?Math.min(data.indicators.length,Math.max(1,w.m)):1;$('dataset-status').textContent='已恢复上次暂存的工作状态，请点击“开始计算”重新生成结果。';}
+ }catch{$('dataset-status').textContent='上次暂存内容无效，已使用新的空白数据集。';data=emptyData();currentKey='';currentName='新数据集';savedSnapshot=signature(data);dirty=false;}
+ datasetOptions();renderEditor();refreshTitle();
+})();
+</script>
+</body>
+</html>
